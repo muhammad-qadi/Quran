@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">Quran</string>
+    <string name="zero_time">00:00:00</string>
+    <string name="empty_title">No content</string>
+    <string name="empty_sub_title">None</string>
+    <string name="user_notification_channel_name">Quran</string>
+    <string name="user_notification_channel_desc">Quran</string>
+</resources>

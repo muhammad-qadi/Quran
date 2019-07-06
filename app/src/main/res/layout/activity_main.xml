@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.sothree.slidinguppanel.SlidingUpPanelLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:sothree="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/panel"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:gravity="bottom"
+    sothree:umanoPanelHeight="64dp"
+    sothree:umanoShadowHeight="4dp"
+    tools:context=".presentation.main.MainActivity">
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="?attr/colorPrimaryDark">
+
+    </FrameLayout>
+
+    <fragment
+        android:id="@+id/player"
+        android:name="com.qadi.quran.presentation.player.PlayerFragment"
+        android:layout_width="match_parent"
+        android:layout_height="248dp"
+        tools:layout="@layout/fragment_player">
+
+    </fragment>
+
+</com.sothree.slidinguppanel.SlidingUpPanelLayout>

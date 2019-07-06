@@ -1,0 +1,69 @@
+apply plugin: 'com.android.application'
+apply plugin: 'kotlin-android'
+apply plugin: 'kotlin-android-extensions'
+apply plugin: 'kotlin-kapt'
+
+android {
+    compileSdkVersion 29
+    buildToolsVersion "29.0.0"
+    defaultConfig {
+        applicationId "com.qadi.quran"
+        minSdkVersion 21
+        targetSdkVersion 29
+        versionCode 1
+        versionName "1.0"
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+    }
+    buildTypes {
+        debug {
+            buildConfigField "Boolean", "IS_LOGGING_ENABLED", "true"
+        }
+        release {
+            buildConfigField "Boolean", "IS_LOGGING_ENABLED", "false"
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+}
+
+def exo_Player = "2.9.5"
+def slidinguppanel = "3.4.0"
+def lifecycle = "2.2.0-alpha02"
+def livedata = "2.2.0-alpha02"
+def materialprogressbar = "1.6.1"
+def butterknife = "10.1.0"
+def appcompat = "1.0.2"
+def legacy_support = "1.0.0"
+
+dependencies {
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
+    implementation "com.google.android.exoplayer:exoplayer:$exo_Player"
+    implementation "com.sothree.slidinguppanel:library:$slidinguppanel"
+    implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:$lifecycle"
+    implementation group: "androidx.lifecycle", name: "lifecycle-viewmodel", version: "$lifecycle"
+    implementation group: "androidx.lifecycle", name: "lifecycle-extensions", version: "$lifecycle"
+    implementation group: "androidx.lifecycle", name: "lifecycle-livedata", version: "$livedata"
+    implementation group: "androidx.lifecycle", name: "lifecycle-livedata-ktx", version: "$livedata"
+    implementation "me.zhanghai.android.materialprogressbar:library:$materialprogressbar"
+    implementation "com.jakewharton:butterknife:$butterknife"
+    kapt "com.jakewharton:butterknife-compiler:$butterknife"
+    implementation "com.jakewharton:butterknife:$butterknife"
+    implementation "androidx.appcompat:appcompat:$appcompat"
+    implementation "androidx.legacy:legacy-support-v4:$legacy_support"
+    //test
+    androidTestImplementation group: "androidx.test.ext", name: "junit", version: "1.1.1"
+    testImplementation "junit:junit:4.12"
+    androidTestImplementation "androidx.test:runner:1.2.0"
+    androidTestImplementation "androidx.test.espresso:espresso-core:3.2.0"
+}
+androidExtensions {
+    experimental = true
+}
+kapt {
+    generateStubs = true
+}
