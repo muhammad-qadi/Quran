@@ -13,7 +13,7 @@ import com.qadi.quran.presentation.main.MainActivity
 import kotlinx.android.synthetic.main.media_item.view.*
 
 class MediaAdapter(private val mediaList: MutableList<Media> = mutableListOf()) :
-        RecyclerView.Adapter<MediaAdapter.MediaHolder>() {
+    RecyclerView.Adapter<MediaAdapter.MediaHolder>() {
 
     override fun getItemCount(): Int = mediaList.size
 
@@ -31,7 +31,7 @@ class MediaAdapter(private val mediaList: MutableList<Media> = mutableListOf()) 
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): MediaHolder =
-            MediaHolder(LayoutInflater.from(parent.context).inflate(R.layout.media_item, parent, false))
+        MediaHolder(LayoutInflater.from(parent.context).inflate(R.layout.media_item, parent, false))
 
     fun updateMedia(mediaList: List<Media>) {
         if (this.mediaList.isNotEmpty()) this.mediaList.clear();this.mediaList.addAll(mediaList)

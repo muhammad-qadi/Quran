@@ -31,9 +31,9 @@ class PlayerFragment : Fragment() {
         vm.playerState.observe(this, Observer {
             when (it) {
                 PlaybackStateCompat.STATE_BUFFERING -> onBuffering()
-                PlaybackStateCompat.STATE_ERROR     -> onError()
-                PlaybackStateCompat.STATE_PAUSED    -> onPaused()
-                PlaybackStateCompat.STATE_PLAYING   -> onPlaying()
+                PlaybackStateCompat.STATE_ERROR -> onError()
+                PlaybackStateCompat.STATE_PAUSED -> onPaused()
+                PlaybackStateCompat.STATE_PLAYING -> onPlaying()
             }
         })
     }
@@ -151,7 +151,7 @@ class PlayerFragment : Fragment() {
         unbinder.unbind()
     }
 
-    fun playPauseMedia(mediaId:String) {
+    fun playPauseMedia(mediaId: String) {
         vm.playPause(mediaId)
     }
 

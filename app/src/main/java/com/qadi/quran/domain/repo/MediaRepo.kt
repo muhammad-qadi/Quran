@@ -18,7 +18,7 @@ object MediaRepo {
 
     suspend fun mediaChildrenForParentId(parentMediaId: ParentMediaId = Key.MAIN_MEDIA_ID): List<ChildMedia> {
         return mediaMap[parentMediaId] ?: (allMedia()
-                .filter { it.parentId == parentMediaId }).apply { mediaMap[parentMediaId] = this }
+            .filter { it.parentId == parentMediaId }).apply { mediaMap[parentMediaId] = this }
     }
 
     suspend fun parentMediaForChildId(childMediaId: ChildMediaId): ParentMedia {

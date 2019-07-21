@@ -329,35 +329,21 @@ class Player(private val playerService: PlayerService) : Runnable, AudioManager.
 
     fun preparePlayer(childMediaId: ChildMediaId) {
         playerHandler.post {
-            //
             Logger.logI(tag, "prepare player")
             runBlocking {
-                //
                 val childMedia: Media = MediaRepo.mediaForId(childMediaId)
                 val allChildren: List<ChildMedia> = MediaRepo.otherChildren(childMediaId)
                 val childIndex = allChildren.indexOf(childMedia)
                 val allChildrenIds = allChildren.map { it.id }
-                //
                 if (childId != null) {
                     if (allChildrenIds.contains(childId!!)) {
-                        //
-                        if (childId == childMediaId) {
-                            playPause()
-                        } else {
-                            seekToChild(childIndex)
-                        }
+                        if (childId == childMediaId) playPause() else seekToChild(childIndex)
                     } else {
-                        //
-                        internalPrepare(allChildren)
-                        seekToChild(childIndex)
-                        play()
+                        internalPrepare(allChildren);seekToChild(childIndex);play()
                     }
                     childId = childMediaId
                 } else {
-                    childId = childMediaId
-                    internalPrepare(allChildren)
-                    seekToChild(childIndex)
-                    play()
+                    childId = childMediaId;internalPrepare(allChildren);seekToChild(childIndex);play()
                 }
             }
         }
