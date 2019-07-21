@@ -1,7 +1,5 @@
 package com.qadi.quran.presentation.player
 
-import android.animation.Animator
-import android.animation.AnimatorListenerAdapter
 import android.os.Build
 import android.os.Bundle
 import android.support.v4.media.session.PlaybackStateCompat
@@ -17,6 +15,8 @@ import butterknife.OnClick
 import butterknife.Unbinder
 import com.qadi.quran.R
 import com.qadi.quran.domain.ext.millisToPlayerDuration
+import com.qadi.quran.presentation.ext.hide
+import com.qadi.quran.presentation.ext.show
 import kotlinx.android.synthetic.main.fragment_player.*
 
 class PlayerFragment : Fragment() {
@@ -31,9 +31,9 @@ class PlayerFragment : Fragment() {
         vm.playerState.observe(this, Observer {
             when (it) {
                 PlaybackStateCompat.STATE_BUFFERING -> onBuffering()
-                PlaybackStateCompat.STATE_ERROR -> onError()
-                PlaybackStateCompat.STATE_PAUSED -> onPaused()
-                PlaybackStateCompat.STATE_PLAYING -> onPlaying()
+                PlaybackStateCompat.STATE_ERROR     -> onError()
+                PlaybackStateCompat.STATE_PAUSED    -> onPaused()
+                PlaybackStateCompat.STATE_PLAYING   -> onPlaying()
             }
         })
     }
@@ -101,18 +101,6 @@ class PlayerFragment : Fragment() {
         loading.show()
     }
 
-    private fun View.show(onEnd: () -> Unit = {}) {
-        animate().alpha(1F).setDuration(300).setListener(object : AnimatorListenerAdapter() {
-            override fun onAnimationEnd(animation: Animator) = onEnd()
-        }).start()
-    }
-
-    private fun View.hide(onEnd: () -> Unit = {}) {
-        animate().alpha(0F).setDuration(300).setListener(object : AnimatorListenerAdapter() {
-            override fun onAnimationEnd(animation: Animator) = onEnd()
-        }).start()
-    }
-
     private fun SeekBar.setProgressCompat(inProgress: Long) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) seekBar.setProgress(inProgress.toInt(), true)
         else progress = inProgress.toInt()
@@ -163,9 +151,12 @@ class PlayerFragment : Fragment() {
         unbinder.unbind()
     }
 
+    fun playPauseMedia(mediaId:String) {
+        vm.playPause(mediaId)
+    }
+
     @OnClick(R.id.playPause)
     fun playPause() {
-        vm.playPause(vm.testMedia1, null)
     }
 
     @OnClick(R.id.previous)

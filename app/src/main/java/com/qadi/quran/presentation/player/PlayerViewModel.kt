@@ -14,8 +14,6 @@ import com.qadi.quran.domain.ext.millisToPlayerDuration
 import com.qadi.quran.domain.log.Logger
 import com.qadi.quran.domain.player.PlayerService
 import com.qadi.quran.entity.Key
-import com.qadi.quran.entity.Media
-import com.qadi.quran.entity.MediaItem
 
 class PlayerViewModel(private val app: Application) : AndroidViewModel(app) {
 
@@ -84,15 +82,13 @@ class PlayerViewModel(private val app: Application) : AndroidViewModel(app) {
         )
     }
 
-    private fun playingMediaItem(media: Media): MediaItem? {
-        return media.items.firstOrNull { mediaControllerCompat.metadata?.getString(MediaMetadataCompat.METADATA_KEY_MEDIA_ID) == it.id }
-    }
+//    private fun playingMediaItem(media: PlayerMedia): Media? {
+//        return media.mediaItems()
+//            .firstOrNull { mediaControllerCompat.metadata?.getString(MediaMetadataCompat.METADATA_KEY_MEDIA_ID) == it.id }
+//    }
 
-    private fun prepare(media: Media, mediaItem: MediaItem) {
-        val bundle = Bundle()
-        bundle.putParcelable(Key.MEDIA_ITEM, mediaItem)
-        bundle.putParcelable(Key.MEDIA, media)
-        mediaControllerCompat.transportControls.prepareFromMediaId(mediaItem.id, bundle)
+    private fun prepare(mediaId: String) {
+        mediaControllerCompat.transportControls.prepareFromMediaId(mediaId, null)
     }
 
     private fun isRepeatOneOn(): Boolean {
@@ -107,10 +103,8 @@ class PlayerViewModel(private val app: Application) : AndroidViewModel(app) {
         mediaControllerCompat.transportControls.seekTo(progress.toLong())
     }
 
-    fun playPause(media: Media, mediaItem: MediaItem?) {
-        with(mediaControllerCompat.transportControls) {
-            prepare(media, mediaItem ?: playingMediaItem(media) ?: media.items[0]);play()
-        }
+    fun playPause(mediaId: String) {
+        prepare(mediaId)
     }
 
     fun next() {
@@ -142,18 +136,6 @@ class PlayerViewModel(private val app: Application) : AndroidViewModel(app) {
     fun disconnectMediaBrowser() {
         mediaBrowserCompat.disconnect()
     }
-
-    val testMedia1 = Media(
-        "1",
-        "المصحف المرتل",
-        "عبدالباسط عبدالصمد",
-        listOf(
-            MediaItem("1", "الفاتحة", "https://download.quranicaudio.com/quran/abdul_basit_murattal/001.mp3"),
-            MediaItem("2", "البقره", "https://download.quranicaudio.com/quran/abdul_basit_murattal/002.mp3"),
-            MediaItem("3", "ال عمران", "https://download.quranicaudio.com/quran/abdul_basit_murattal/003.mp3"),
-            MediaItem("4", "النساء", "https://download.quranicaudio.com/quran/abdul_basit_murattal/004.mp3")
-        )
-    )
 
     data class PlayerMetadata(
         val mediaTitle: String,

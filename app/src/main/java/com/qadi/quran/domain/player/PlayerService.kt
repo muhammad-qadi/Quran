@@ -8,9 +8,6 @@ import android.support.v4.media.session.MediaSessionCompat
 import androidx.media.MediaBrowserServiceCompat
 import androidx.media.session.MediaButtonReceiver
 import com.qadi.quran.domain.log.Logger
-import com.qadi.quran.entity.Key
-import com.qadi.quran.entity.Media
-import com.qadi.quran.entity.MediaItem
 
 class PlayerService : MediaBrowserServiceCompat() {
 
@@ -49,10 +46,8 @@ class PlayerService : MediaBrowserServiceCompat() {
             player.setShuffleMode(shuffleMode)
         }
 
-        override fun onPrepareFromMediaId(mediaId: String?, extras: Bundle) {
-            val mediaItem: MediaItem = extras.getParcelable(Key.MEDIA_ITEM)!!
-            val media: Media = extras.getParcelable(Key.MEDIA)!!
-            player.preparePlayer(media, mediaItem)
+        override fun onPrepareFromMediaId(mediaId: String, extras: Bundle) {
+            player.preparePlayer(mediaId)
         }
 
     }
@@ -98,7 +93,7 @@ class PlayerService : MediaBrowserServiceCompat() {
     }
 
     private fun initMediaSession(): MediaSessionCompat {
-        Logger.logI(tag, "Initializing media session ...")
+        Logger.logI(tag, "Initializing mainMedia session ...")
         val mediaSession = MediaSessionCompat(this, "Muhammad-Qadi")
         mediaSession.setFlags(MediaSessionCompat.FLAG_HANDLES_TRANSPORT_CONTROLS or MediaSessionCompat.FLAG_HANDLES_MEDIA_BUTTONS)
         mediaSession.setCallback(mediaSessionCallback)

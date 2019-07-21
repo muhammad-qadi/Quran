@@ -27,10 +27,14 @@ import com.google.android.exoplayer2.upstream.DefaultHttpDataSourceFactory
 import com.google.android.exoplayer2.upstream.cache.CacheDataSourceFactory
 import com.google.android.exoplayer2.upstream.cache.LeastRecentlyUsedCacheEvictor
 import com.google.android.exoplayer2.upstream.cache.SimpleCache
+import com.qadi.quran.domain.api.streamUrl
 import com.qadi.quran.domain.log.Logger
+import com.qadi.quran.domain.repo.MediaRepo
+import com.qadi.quran.entity.ChildMedia
+import com.qadi.quran.entity.ChildMediaId
 import com.qadi.quran.entity.Key
 import com.qadi.quran.entity.Media
-import com.qadi.quran.entity.MediaItem
+import kotlinx.coroutines.runBlocking
 import com.qadi.quran.domain.player.Player as QuranPlayer
 
 class Player(private val playerService: PlayerService) : Runnable, AudioManager.OnAudioFocusChangeListener {
@@ -62,7 +66,7 @@ class Player(private val playerService: PlayerService) : Runnable, AudioManager.
     private lateinit var defaultLoadControl: DefaultLoadControl
     private lateinit var defaultRendererFactory: RenderersFactory
 
-    private var media: Media? = null
+    private var childId: ChildMediaId? = null
 
     private lateinit var mediaSession: MediaSessionCompat
 
@@ -119,8 +123,7 @@ class Player(private val playerService: PlayerService) : Runnable, AudioManager.
         Logger.logI(tag, "requesting audio focus")
         val audioManager = playerService.getSystemService(Context.AUDIO_SERVICE) as AudioManager
         val result =
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) audioManager.requestAudioFocus(audioFocusRequest) ==
-                    AudioManager.AUDIOFOCUS_REQUEST_GRANTED
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) audioManager.requestAudioFocus(audioFocusRequest) == AudioManager.AUDIOFOCUS_REQUEST_GRANTED
             else audioManager.requestAudioFocus(
                 this,
                 AudioManager.STREAM_MUSIC,
@@ -156,6 +159,10 @@ class Player(private val playerService: PlayerService) : Runnable, AudioManager.
         return simpleExoPlayer.playWhenReady
     }
 
+    private fun setMetadata() {
+        mediaSession.setMetadata(buildMetadata())
+    }
+
     private fun play() {
         playerHandler.post {
             Logger.logI(tag, "play")
@@ -174,151 +181,31 @@ class Player(private val playerService: PlayerService) : Runnable, AudioManager.
     }
 
     private fun buildMetadata(): MediaMetadataCompat {
-        val currentMediaItem = media!!.items[simpleExoPlayer.currentWindowIndex]
-        metadataBuilder.putString(MediaMetadataCompat.METADATA_KEY_MEDIA_ID, currentMediaItem.id)
-            .putString(MediaMetadataCompat.METADATA_KEY_DISPLAY_TITLE, media!!.title)
-            .putString(MediaMetadataCompat.METADATA_KEY_TITLE, currentMediaItem.title)
-            .putLong(MediaMetadataCompat.METADATA_KEY_DURATION, simpleExoPlayer.duration)
-        return metadataBuilder.build()
-    }
-
-    private fun setMetadata() {
-        mediaSession.setMetadata(buildMetadata())
-    }
-
-    override fun onAudioFocusChange(focusChange: Int) {
-        when (focusChange) {
-            AudioManager.AUDIOFOCUS_GAIN -> onAudioFocusGain()
-            AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK -> onAudioFocusLossTransientCanDuck()
-            AudioManager.AUDIOFOCUS_LOSS_TRANSIENT -> onAudioFocusLossTransient()
-            AudioManager.AUDIOFOCUS_LOSS -> onAudioFocusLoss()
+        return runBlocking {
+            val allChildren = MediaRepo.otherChildren(childId!!)
+            val currentChild = allChildren[simpleExoPlayer.currentWindowIndex]
+            val parent = MediaRepo.parentMediaForChildId(childId!!)
+            metadataBuilder
+                .putString(MediaMetadataCompat.METADATA_KEY_MEDIA_ID, currentChild.id)
+                .putString(MediaMetadataCompat.METADATA_KEY_DISPLAY_TITLE, parent.title)
+                .putString(MediaMetadataCompat.METADATA_KEY_TITLE, currentChild.title)
+                .putLong(MediaMetadataCompat.METADATA_KEY_DURATION, simpleExoPlayer.duration)
+            return@runBlocking metadataBuilder.build()
         }
     }
 
-    override fun run() {
-        playerHandler.post {
-            elapsedTimeHandler.postDelayed(this, elapsedTimeRefreshInterval)
-            playerBundle.putLong(Key.PLAYER_ELAPSED_TIME, simpleExoPlayer.currentPosition)
-            mediaSession.sendSessionEvent(Key.PLAYER_ELAPSED_TIME_EVENT, playerBundle)
-        }
+    private fun internalPrepare(allChildren: List<ChildMedia>) {
+        val mediaSources: Array<ExtractorMediaSource> = allChildren
+            .map {
+                ExtractorMediaSource.Factory(cacheDataSourceFactory)
+                    .createMediaSource(Uri.parse(streamUrl(it.id)))
+            }.toTypedArray()
+        val contactingMediaSource = ConcatenatingMediaSource(*mediaSources)
+        simpleExoPlayer.prepare(contactingMediaSource, true, true)
     }
 
-    fun init() {
-        if (isInit) Logger.logE(tag, "an instance of player already exists")
-        Logger.logI(tag, "initializing")
-        playerHandlerThread.start()
-        playerHandler.post {
-            initComponents()
-            simpleExoPlayer = ExoPlayerFactory.newSimpleInstance(
-                playerService,
-                defaultRendererFactory,
-                defaultTrackSelector,
-                defaultLoadControl,
-                null,
-                playerHandlerThread.looper
-            )
-            simpleExoPlayer.addListener(Listener(this))
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) initAudioFocusRequest()
-            isInit = true
-        }
-
-    }
-
-    fun setMediaSession(mediaSessionCompat: MediaSessionCompat) {
-        this.mediaSession = mediaSessionCompat
-    }
-
-    fun preparePlayer(media: Media, mediaItem: MediaItem) {
-        playerHandler.post {
-            if (this.media != null && this.media == media && this.media!!.items.contains(mediaItem)) {
-                val currentMediaItem = media.items[simpleExoPlayer.currentWindowIndex]
-                if (currentMediaItem != mediaItem) setMediaItem(mediaItem)
-                Logger.logI(tag, "not preparing cause : same media")
-                return@post
-            }
-            Logger.logI(tag, "preparing")
-            this.media = media
-            val mediaSources = media.items.map {
-                ExtractorMediaSource.Factory(cacheDataSourceFactory).createMediaSource(Uri.parse(it.url))
-            }
-            val contactingMediaSource = ConcatenatingMediaSource(*mediaSources.toTypedArray())
-            simpleExoPlayer.prepare(contactingMediaSource, true, true)
-            setMediaItem(mediaItem)
-        }
-    }
-
-    fun seekTo(pos: Long) {
-        playerHandler.post { simpleExoPlayer.seekTo(pos) }
-    }
-
-    fun playPause() {
-        playerHandler.post {
-            if (simpleExoPlayer.playWhenReady) pause() else play()
-        }
-    }
-
-    fun next() {
-        playerHandler.post {
-            Logger.logI(tag, "next")
-            with(simpleExoPlayer) {
-                if (currentWindowIndex < media?.items?.lastIndex ?: return@post) seekTo(
-                    simpleExoPlayer.currentWindowIndex + 1,
-                    0
-                )
-                else seekTo(0, 0)
-                if (!playWhenReady) play()
-            }
-        }
-    }
-
-    fun previous() {
-        playerHandler.post {
-            Logger.logI(tag, "previous")
-            with(simpleExoPlayer) {
-                if (currentWindowIndex == 0) seekTo(media?.items?.lastIndex ?: return@post, 0)
-                else seekTo(currentWindowIndex - 1, 0)
-                if (!playWhenReady) play()
-            }
-        }
-    }
-
-    fun setRepeatMode(repeatMode: Int) {
-        playerHandler.post {
-            Logger.logI(tag, "set repeat mode")
-            simpleExoPlayer.repeatMode =
-                if (repeatMode == PlaybackStateCompat.REPEAT_MODE_ONE) Player.REPEAT_MODE_ONE else Player.REPEAT_MODE_OFF
-            mediaSession.setRepeatMode(repeatMode)
-        }
-    }
-
-    fun setShuffleMode(shuffleMode: Int) {
-        playerHandler.post {
-            Logger.logI(tag, "set shuffle mode")
-            simpleExoPlayer.shuffleModeEnabled = shuffleMode == PlaybackStateCompat.SHUFFLE_MODE_ALL
-            mediaSession.setShuffleMode(shuffleMode)
-        }
-    }
-
-    fun stop() {
-        playerHandler.post {
-            Logger.logI(tag, "stop")
-            simpleExoPlayer.stop()
-        }
-    }
-
-    fun release() {
-        playerHandler.post {
-            Logger.logI(tag, "release")
-            playerHandlerThread.quit()
-            simpleExoPlayer.release()
-            cache.release()
-        }
-    }
-
-    private fun setMediaItem(mediaItem: MediaItem) {
-        playerHandler.post {
-            simpleExoPlayer.seekTo(media!!.items.indexOf(mediaItem), 0)
-        }
+    private fun seekToChild(index: Int) {
+        playerHandler.post { simpleExoPlayer.seekTo(index, 0) }
     }
 
     private fun setPlaybackState(inPlaybackState: Int) {
@@ -385,6 +272,155 @@ class Player(private val playerService: PlayerService) : Runnable, AudioManager.
     private fun onPositionDiscontinuity() {
         setMetadata()
         PlayerNotification.notify(playerService, mediaSession, false)
+    }
+
+
+    override fun onAudioFocusChange(focusChange: Int) {
+        when (focusChange) {
+            AudioManager.AUDIOFOCUS_GAIN -> onAudioFocusGain()
+            AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK -> onAudioFocusLossTransientCanDuck()
+            AudioManager.AUDIOFOCUS_LOSS_TRANSIENT -> onAudioFocusLossTransient()
+            AudioManager.AUDIOFOCUS_LOSS -> onAudioFocusLoss()
+        }
+    }
+
+    override fun run() {
+        playerHandler.post {
+            elapsedTimeHandler.postDelayed(this, elapsedTimeRefreshInterval)
+            playerBundle.putLong(Key.PLAYER_ELAPSED_TIME, simpleExoPlayer.currentPosition)
+            mediaSession.sendSessionEvent(Key.PLAYER_ELAPSED_TIME_EVENT, playerBundle)
+        }
+    }
+
+    fun init() {
+        if (isInit) Logger.logE(tag, "an instance of player already exists")
+        Logger.logI(tag, "initializing")
+        playerHandlerThread.start()
+        playerHandler.post {
+            initComponents()
+            simpleExoPlayer = ExoPlayerFactory.newSimpleInstance(
+                playerService,
+                defaultRendererFactory,
+                defaultTrackSelector,
+                defaultLoadControl,
+                null,
+                playerHandlerThread.looper
+            )
+            simpleExoPlayer.addListener(Listener(this))
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) initAudioFocusRequest()
+            isInit = true
+        }
+
+    }
+
+    fun setMediaSession(mediaSessionCompat: MediaSessionCompat) {
+        this.mediaSession = mediaSessionCompat
+    }
+
+    fun seekTo(pos: Long) {
+        playerHandler.post { simpleExoPlayer.seekTo(pos) }
+    }
+
+    fun playPause() {
+        playerHandler.post {
+            if (simpleExoPlayer.playWhenReady) pause() else play()
+        }
+    }
+
+    fun preparePlayer(childMediaId: ChildMediaId) {
+        playerHandler.post {
+            //
+            Logger.logI(tag, "prepare player")
+            runBlocking {
+                //
+                val childMedia: Media = MediaRepo.mediaForId(childMediaId)
+                val allChildren: List<ChildMedia> = MediaRepo.otherChildren(childMediaId)
+                val childIndex = allChildren.indexOf(childMedia)
+                val allChildrenIds = allChildren.map { it.id }
+                //
+                if (childId != null) {
+                    if (allChildrenIds.contains(childId!!)) {
+                        //
+                        if (childId == childMediaId) {
+                            playPause()
+                        } else {
+                            seekToChild(childIndex)
+                        }
+                    } else {
+                        //
+                        internalPrepare(allChildren)
+                        seekToChild(childIndex)
+                        play()
+                    }
+                    childId = childMediaId
+                } else {
+                    childId = childMediaId
+                    internalPrepare(allChildren)
+                    seekToChild(childIndex)
+                    play()
+                }
+            }
+        }
+    }
+
+    fun next() {
+        playerHandler.post {
+            Logger.logI(tag, "next")
+            with(simpleExoPlayer) {
+                val allChildren = runBlocking { MediaRepo.otherChildren(childId!!) }
+                if (currentWindowIndex < allChildren.lastIndex) seekTo(
+                    simpleExoPlayer.currentWindowIndex + 1,
+                    0
+                )
+                else seekTo(0, 0)
+                if (!playWhenReady) play()
+            }
+        }
+    }
+
+    fun previous() {
+        playerHandler.post {
+            Logger.logI(tag, "previous")
+            with(simpleExoPlayer) {
+                val allChildren = runBlocking { MediaRepo.otherChildren(childId!!) }
+                if (currentWindowIndex == 0) seekTo(allChildren.lastIndex, 0)
+                else seekTo(currentWindowIndex - 1, 0)
+                if (!playWhenReady) play()
+            }
+        }
+    }
+
+    fun setRepeatMode(repeatMode: Int) {
+        playerHandler.post {
+            Logger.logI(tag, "set repeat mode")
+            simpleExoPlayer.repeatMode =
+                if (repeatMode == PlaybackStateCompat.REPEAT_MODE_ONE) Player.REPEAT_MODE_ONE else Player.REPEAT_MODE_OFF
+            mediaSession.setRepeatMode(repeatMode)
+        }
+    }
+
+    fun setShuffleMode(shuffleMode: Int) {
+        playerHandler.post {
+            Logger.logI(tag, "set shuffle mode")
+            simpleExoPlayer.shuffleModeEnabled = shuffleMode == PlaybackStateCompat.SHUFFLE_MODE_ALL
+            mediaSession.setShuffleMode(shuffleMode)
+        }
+    }
+
+    fun stop() {
+        playerHandler.post {
+            Logger.logI(tag, "stop")
+            simpleExoPlayer.stop()
+        }
+    }
+
+    fun release() {
+        playerHandler.post {
+            Logger.logI(tag, "release")
+            playerHandlerThread.quit()
+            simpleExoPlayer.release()
+            cache.release()
+        }
     }
 
     object Listener : Player.EventListener {

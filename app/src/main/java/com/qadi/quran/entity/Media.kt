@@ -1,7 +1,12 @@
 package com.qadi.quran.entity
 
 import android.os.Parcelable
+import com.google.gson.annotations.SerializedName
 import kotlinx.android.parcel.Parcelize
 
 @Parcelize
-data class Media(val id: String, val title: String, val reciter: String, val items: List<MediaItem>) : Parcelable
+data class Media(@SerializedName("id") val id: String,
+                 @SerializedName("parent_id") val parentId: String,
+                 @SerializedName("title") val title: String,
+                 @SerializedName("is_list") val isList: Boolean) : Parcelable
+
