@@ -331,6 +331,10 @@ class Player(private val playerService: PlayerService) : Runnable, AudioManager.
         playerHandler.post {
             Logger.logI(tag, "prepare player")
             runBlocking {
+                if (childMediaId == Key.EMPTY_MEDIA_ID) {
+                    if (childId != null) playPause()
+                    return@runBlocking
+                }
                 val childMedia: Media = MediaRepo.mediaForId(childMediaId)
                 val allChildren: List<ChildMedia> = MediaRepo.otherChildren(childMediaId)
                 val childIndex = allChildren.indexOf(childMedia)

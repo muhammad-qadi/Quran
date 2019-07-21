@@ -15,6 +15,7 @@ import butterknife.OnClick
 import butterknife.Unbinder
 import com.qadi.quran.R
 import com.qadi.quran.domain.ext.millisToPlayerDuration
+import com.qadi.quran.entity.Key
 import com.qadi.quran.presentation.ext.hide
 import com.qadi.quran.presentation.ext.show
 import kotlinx.android.synthetic.main.fragment_player.*
@@ -157,6 +158,7 @@ class PlayerFragment : Fragment() {
 
     @OnClick(R.id.playPause)
     fun playPause() {
+        vm.playPause(Key.EMPTY_MEDIA_ID)
     }
 
     @OnClick(R.id.previous)

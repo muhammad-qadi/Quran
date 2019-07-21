@@ -82,11 +82,6 @@ class PlayerViewModel(private val app: Application) : AndroidViewModel(app) {
         )
     }
 
-//    private fun playingMediaItem(media: PlayerMedia): Media? {
-//        return media.mediaItems()
-//            .firstOrNull { mediaControllerCompat.metadata?.getString(MediaMetadataCompat.METADATA_KEY_MEDIA_ID) == it.id }
-//    }
-
     private fun prepare(mediaId: String) {
         mediaControllerCompat.transportControls.prepareFromMediaId(mediaId, null)
     }
