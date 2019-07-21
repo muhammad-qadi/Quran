@@ -31,7 +31,8 @@ class MediaFragment : Fragment() {
 
     private fun initRV() {
         context?.let {
-            mediaRecyclerView.layoutManager = GridLayoutManager(it, 1);mediaRecyclerView.adapter = adapter
+            mediaRecyclerView.layoutManager =
+                GridLayoutManager(it, resources.getInteger(R.integer.span_count));mediaRecyclerView.adapter = adapter
         }
     }
 
@@ -40,9 +41,6 @@ class MediaFragment : Fragment() {
     }
 
     private fun updateAdapter(childrenMedia: List<Media>) {
-        context?.let {
-            adapter.updateMedia(childrenMedia)
-            pb.hide()
-        }
+        context?.let { adapter.updateMedia(childrenMedia);pb.hide() }
     }
 }

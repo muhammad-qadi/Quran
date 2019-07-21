@@ -19,6 +19,7 @@ class MediaAdapter(private val mediaList: MutableList<Media> = mutableListOf()) 
 
     override fun onBindViewHolder(holder: MediaHolder, position: Int) {
         val mediaItem = mediaList[holder.adapterPosition];holder.itemView.title.text = mediaItem.title
+        holder.itemView.title.isSelected = true
         holder.itemView.setOnClickListener {
             val ma = holder.itemView.context as MainActivity
             if (mediaItem.isList) {
