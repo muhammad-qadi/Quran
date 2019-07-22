@@ -22,20 +22,31 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/mediaRecyclerView"
+        <FrameLayout
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:background="@color/colorPrimaryDark"
-            tools:listitem="@layout/media_item" />
+            android:layout_height="match_parent">
 
-        <me.zhanghai.android.materialprogressbar.MaterialProgressBar
-            android:id="@+id/pb"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:alpha="1"
-            tools:alpha="1" />
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/mediaRecyclerView"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@color/colorPrimaryDark"
+                tools:listitem="@layout/media_item" />
+
+            <androidx.appcompat.widget.AppCompatTextView
+                android:text="@string/empty_title"
+                android:id="@+id/noContent"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:alpha="0"
+                android:fontFamily="@font/main_res"
+                android:gravity="center"
+                android:textColor="?attr/colorAccent"
+                tools:alpha="1"
+                tools:text="عفوا لا يوجد محتوي" />
+
+        </FrameLayout>
 
     </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 

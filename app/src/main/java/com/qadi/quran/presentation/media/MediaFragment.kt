@@ -12,6 +12,7 @@ import com.qadi.quran.domain.log.Logger
 import com.qadi.quran.entity.Key
 import com.qadi.quran.entity.Media
 import com.qadi.quran.presentation.ext.hide
+import com.qadi.quran.presentation.ext.show
 import com.qadi.quran.presentation.main.MainActivity
 import kotlinx.android.synthetic.main.fragment_media.*
 
@@ -51,11 +52,16 @@ class MediaFragment : Fragment() {
 
     private fun loadMediaList() {
         Logger.logI(logTag, "loadMediaList")
+        if (parentMediaId == Key.MAIN_MEDIA_ID) srl.isRefreshing = true
         vm.mediaChildrenForParentId(parentMediaId)
-            .observe(this, Observer { updateAdapter(it);srl.isRefreshing = false })
+            .observe(this, Observer { updateAdapter(it);srl.isRefreshing = false;showNoContent(it.isEmpty()) })
+    }
+
+    private fun showNoContent(isShown: Boolean) {
+        if (isShown) noContent.show() else noContent.hide()
     }
 
     private fun updateAdapter(childrenMedia: List<Media>) {
-        context?.let { adapter.updateMedia(childrenMedia);pb.hide() }
+        context?.let { adapter.updateMedia(childrenMedia);srl.isRefreshing = false }
     }
 }

@@ -5,4 +5,5 @@
     <string name="empty_sub_title">None</string>
     <string name="user_notification_channel_name">Quran</string>
     <string name="user_notification_channel_desc">Quran</string>
+    <string name="empty_content">No content</string>
 </resources>
