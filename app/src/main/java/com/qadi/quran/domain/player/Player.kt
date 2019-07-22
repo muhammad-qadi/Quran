@@ -355,6 +355,7 @@ class Player(private val playerService: PlayerService) : Runnable, AudioManager.
         playerHandler.post {
             Logger.logI(tag, "next")
             with(simpleExoPlayer) {
+                childId ?: return@post
                 val allChildren = runBlocking { MediaRepo.otherChildren(childId!!) }
                 if (currentWindowIndex < allChildren.lastIndex) seekTo(simpleExoPlayer.currentWindowIndex + 1, 0)
                 else seekTo(0, 0)
@@ -367,6 +368,7 @@ class Player(private val playerService: PlayerService) : Runnable, AudioManager.
         playerHandler.post {
             Logger.logI(tag, "previous")
             with(simpleExoPlayer) {
+                childId ?: return@post
                 val allChildren = runBlocking { MediaRepo.otherChildren(childId!!) }
                 if (currentWindowIndex == 0) seekTo(allChildren.lastIndex, 0)
                 else seekTo(currentWindowIndex - 1, 0)
