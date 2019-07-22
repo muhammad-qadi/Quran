@@ -23,7 +23,10 @@ class MediaAdapter(private val mediaList: MutableList<Media> = mutableListOf()) 
         holder.itemView.setOnClickListener {
             val ma = holder.itemView.context as MainActivity
             if (mediaItem.isList) {
-                val bundle = Bundle();bundle.putString(Key.MEDIA_ID, mediaItem.id)
+                val bundle = Bundle();bundle.putString(Key.MEDIA_ID, mediaItem.id);bundle.putString(
+                    "title",
+                    mediaItem.title
+                )
                 ma.findNavController(R.id.nav_host_fragment).navigate(R.id.action_global_mediaFragment, bundle)
             } else {
                 ma.playPause(mediaItem.id)

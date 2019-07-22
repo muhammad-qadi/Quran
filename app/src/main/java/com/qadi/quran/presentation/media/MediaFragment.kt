@@ -21,6 +21,7 @@ class MediaFragment : Fragment() {
     private val logTag = "MediaFragment"
     private val adapter by lazy { MediaAdapter(mutableListOf()) }
     private val parentMediaId: String by lazy { arguments?.getString("media-id")!! }
+    private val mTitle: String by lazy { arguments?.getString("title") ?: getString(R.string.main_title) }
     private val vm by lazy { (activity as MainActivity).vm }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
@@ -29,6 +30,7 @@ class MediaFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        setToolbarTitle(mTitle)
         initPullToRefresh()
         initList()
         loadMediaList()
@@ -50,11 +52,16 @@ class MediaFragment : Fragment() {
         }
     }
 
+    private fun setToolbarTitle(intTitle: String) {
+        title.text = intTitle
+    }
+
     private fun loadMediaList() {
         Logger.logI(logTag, "loadMediaList")
         if (parentMediaId == Key.MAIN_MEDIA_ID) srl.isRefreshing = true
         vm.mediaChildrenForParentId(parentMediaId)
-            .observe(this, Observer { updateAdapter(it);srl.isRefreshing = false;showNoContent(it.isEmpty()) })
+            .observe(this,
+                Observer { updateAdapter(it);srl.isRefreshing = false;showNoContent(it.isEmpty()) })
     }
 
     private fun showNoContent(isShown: Boolean) {

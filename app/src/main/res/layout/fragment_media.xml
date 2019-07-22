@@ -13,7 +13,19 @@
         <androidx.appcompat.widget.Toolbar
             android:id="@+id/toolbar"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
+            android:layout_height="wrap_content">
+
+            <androidx.appcompat.widget.AppCompatTextView
+                android:id="@+id/title"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_marginStart="72dp"
+                android:layout_marginEnd="16dp"
+                android:fontFamily="@font/main_res"
+                android:gravity="start"
+                android:textColor="?attr/colorAccent"
+                tools:text="القرآن الكريم" />
+        </androidx.appcompat.widget.Toolbar>
 
     </com.google.android.material.appbar.AppBarLayout>
 
@@ -34,7 +46,6 @@
                 tools:listitem="@layout/media_item" />
 
             <androidx.appcompat.widget.AppCompatTextView
-                android:text="@string/empty_title"
                 android:id="@+id/noContent"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -42,6 +53,7 @@
                 android:alpha="0"
                 android:fontFamily="@font/main_res"
                 android:gravity="center"
+                android:text="@string/empty_title"
                 android:textColor="?attr/colorAccent"
                 tools:alpha="1"
                 tools:text="عفوا لا يوجد محتوي" />
