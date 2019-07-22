@@ -245,11 +245,8 @@ class Player(private val playerService: PlayerService) : Runnable, AudioManager.
             setPlaybackState(PlaybackStateCompat.STATE_PAUSED)
             elapsedTimeHandler.removeCallbacks(this)
             unregisterNoisyReceiver()
-            playerService.startForeground(
-                PlayerNotification.NOTIFICATION_ID,
-                PlayerNotification.notify(playerService, mediaSession, true)
-            )
             playerService.stopForeground(false)
+            PlayerNotification.notify(playerService, mediaSession, true)
         }
     }
 
@@ -259,6 +256,7 @@ class Player(private val playerService: PlayerService) : Runnable, AudioManager.
 
     private fun onEnded() {
         setPlaybackState(PlaybackStateCompat.STATE_STOPPED)
+        playerService.stopForeground(true)
         abandonAudioFocus()
     }
 
@@ -358,10 +356,7 @@ class Player(private val playerService: PlayerService) : Runnable, AudioManager.
             Logger.logI(tag, "next")
             with(simpleExoPlayer) {
                 val allChildren = runBlocking { MediaRepo.otherChildren(childId!!) }
-                if (currentWindowIndex < allChildren.lastIndex) seekTo(
-                    simpleExoPlayer.currentWindowIndex + 1,
-                    0
-                )
+                if (currentWindowIndex < allChildren.lastIndex) seekTo(simpleExoPlayer.currentWindowIndex + 1, 0)
                 else seekTo(0, 0)
                 if (!playWhenReady) play()
             }

@@ -35,6 +35,7 @@ class PlayerFragment : Fragment() {
                 PlaybackStateCompat.STATE_ERROR -> onError()
                 PlaybackStateCompat.STATE_PAUSED -> onPaused()
                 PlaybackStateCompat.STATE_PLAYING -> onPlaying()
+                PlaybackStateCompat.STATE_STOPPED -> onStopped()
             }
         })
     }
@@ -100,6 +101,11 @@ class PlayerFragment : Fragment() {
 
     private fun onBuffering() {
         loading.show()
+    }
+
+    private fun onStopped() {
+        loading.hide()
+        playPause.setImageResource(R.drawable.ic_play_arrow)
     }
 
     private fun SeekBar.setProgressCompat(inProgress: Long) {
