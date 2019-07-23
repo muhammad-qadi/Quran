@@ -257,7 +257,6 @@ class Player(private val playerService: PlayerService) : Runnable, AudioManager.
     private fun onEnded() {
         abandonAudioFocus()
         playerService.stopForeground(true)
-        childId = null
         setPlaybackState(PlaybackStateCompat.STATE_STOPPED)
     }
 
