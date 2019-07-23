@@ -255,15 +255,16 @@ class Player(private val playerService: PlayerService) : Runnable, AudioManager.
     }
 
     private fun onEnded() {
-        setPlaybackState(PlaybackStateCompat.STATE_STOPPED)
-        playerService.stopForeground(true)
         abandonAudioFocus()
+        playerService.stopForeground(true)
+        childId = null
+        setPlaybackState(PlaybackStateCompat.STATE_STOPPED)
     }
 
     private fun onBuffering() {
         setPlaybackState(PlaybackStateCompat.STATE_BUFFERING)
-        setMetadata()
-        PlayerNotification.notify(playerService, mediaSession, true)
+//        setMetadata()
+//        PlayerNotification.notify(playerService, mediaSession, true)
         playerService.stopForeground(false)
     }
 
