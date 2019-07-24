@@ -47,7 +47,7 @@ class PlayerService : MediaBrowserServiceCompat() {
         }
 
         override fun onPrepareFromMediaId(mediaId: String, extras: Bundle) {
-            player.preparePlayer(mediaId)
+            player.prepare(mediaId)
         }
 
     }

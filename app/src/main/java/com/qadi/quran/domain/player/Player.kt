@@ -66,7 +66,7 @@ class Player(private val playerService: PlayerService) : Runnable, AudioManager.
     private lateinit var defaultLoadControl: DefaultLoadControl
     private lateinit var defaultRendererFactory: RenderersFactory
 
-    private var childId: ChildMediaId? = null
+    private var mChildMediaId: ChildMediaId? = null
 
     private lateinit var mediaSession: MediaSessionCompat
 
@@ -182,9 +182,9 @@ class Player(private val playerService: PlayerService) : Runnable, AudioManager.
 
     private fun buildMetadata(): MediaMetadataCompat {
         return runBlocking {
-            val allChildren = MediaRepo.otherChildren(childId!!)
+            val allChildren = MediaRepo.otherChildren(mChildMediaId!!)
             val currentChild = allChildren[simpleExoPlayer.currentWindowIndex]
-            val parent = MediaRepo.parentMediaForChildId(childId!!)
+            val parent = MediaRepo.parentMediaForChildId(mChildMediaId!!)
             metadataBuilder
                 .putString(MediaMetadataCompat.METADATA_KEY_MEDIA_ID, currentChild.id)
                 .putString(MediaMetadataCompat.METADATA_KEY_DISPLAY_TITLE, parent.title)
@@ -262,8 +262,6 @@ class Player(private val playerService: PlayerService) : Runnable, AudioManager.
 
     private fun onBuffering() {
         setPlaybackState(PlaybackStateCompat.STATE_BUFFERING)
-//        setMetadata()
-//        PlayerNotification.notify(playerService, mediaSession, true)
         playerService.stopForeground(false)
     }
 
@@ -274,6 +272,58 @@ class Player(private val playerService: PlayerService) : Runnable, AudioManager.
 
     private fun isPlayingEnded(): Boolean {
         return simpleExoPlayer.playbackState == Player.STATE_ENDED
+    }
+
+    private fun isPlayingNotEnded(): Boolean {
+        return !isPlayingEnded()
+    }
+
+    private suspend fun mediaInfoForPrepare(childMediaId: ChildMediaId): Triple<List<ChildMedia>, Int, List<String>> {
+        val childMedia: Media = MediaRepo.mediaForId(childMediaId)
+        val allChildren: List<ChildMedia> = MediaRepo.otherChildren(childMediaId)
+        val childIndex = allChildren.indexOf(childMedia)
+        val allChildrenIds = allChildren.map { it.id }
+        return Triple(allChildren, childIndex, allChildrenIds)
+    }
+
+    private fun onHasOldMediaChildId(
+        allChildrenIds: List<String>,
+        childMediaId: ChildMediaId,
+        childIndex: Int,
+        allChildren: List<ChildMedia>
+    ) {
+        if (allChildrenIds.contains(mChildMediaId!!)) {
+            if (mChildMediaId == childMediaId && !isPlayingEnded()) {
+                playPause()
+            } else if (mChildMediaId == childMediaId && isPlayingEnded()) {
+                seekTo(0);play()
+            } else {
+                seekToChild(childIndex)
+            }
+        } else {
+            internalPrepare(allChildren);seekToChild(childIndex);play()
+        }
+        mChildMediaId = childMediaId
+    }
+
+    private fun onHasNotOldMediaChildId(
+        childMediaId: ChildMediaId,
+        allChildren: List<ChildMedia>,
+        childIndex: Int
+    ) {
+        mChildMediaId = childMediaId;internalPrepare(allChildren);seekToChild(childIndex);play()
+    }
+
+    private fun onEmptyChildMediaId() {
+        if (hasOldChildMediaId()) playPause()
+    }
+
+    private fun onChildMediaId() {
+        seekTo(0);play()
+    }
+
+    private fun hasOldChildMediaId(): Boolean {
+        return mChildMediaId != null
     }
 
     override fun onAudioFocusChange(focusChange: Int) {
@@ -328,36 +378,20 @@ class Player(private val playerService: PlayerService) : Runnable, AudioManager.
         }
     }
 
-    fun preparePlayer(childMediaId: ChildMediaId) {
+    fun prepare(childMediaId: ChildMediaId) {
         playerHandler.post {
-            Logger.logI(tag, "prepare player")
             runBlocking {
-                if (childMediaId == Key.EMPTY_MEDIA_ID && !isPlayingEnded()) {
-                    if (childId != null) playPause()
-                    return@runBlocking
-                } else if (childMediaId == Key.EMPTY_MEDIA_ID && isPlayingEnded()) {
-                    seekTo(0);play()
-                    return@runBlocking
-                }
-                val childMedia: Media = MediaRepo.mediaForId(childMediaId)
-                val allChildren: List<ChildMedia> = MediaRepo.otherChildren(childMediaId)
-                val childIndex = allChildren.indexOf(childMedia)
-                val allChildrenIds = allChildren.map { it.id }
-                if (childId != null) {
-                    if (allChildrenIds.contains(childId!!)) {
-                        if (childId == childMediaId && !isPlayingEnded()) {
-                            playPause()
-                        } else if (childId == childMediaId && isPlayingEnded()) {
-                            seekTo(0);play()
-                        } else {
-                            seekToChild(childIndex)
+                Logger.logI(tag, "prepare")
+                when {
+                    (Key.EMPTY_MEDIA_ID == childMediaId) && (isPlayingNotEnded()) -> onEmptyChildMediaId()
+                    (Key.EMPTY_MEDIA_ID == childMediaId) && (isPlayingEnded()) -> onChildMediaId()
+                    else -> {
+                        val (allChildren, childIndex, allChildrenIds) = mediaInfoForPrepare(childMediaId)
+                        when (hasOldChildMediaId()) {
+                            true -> onHasOldMediaChildId(allChildrenIds, childMediaId, childIndex, allChildren)
+                            else -> onHasNotOldMediaChildId(childMediaId, allChildren, childIndex)
                         }
-                    } else {
-                        internalPrepare(allChildren);seekToChild(childIndex);play()
                     }
-                    childId = childMediaId
-                } else {
-                    childId = childMediaId;internalPrepare(allChildren);seekToChild(childIndex);play()
                 }
             }
         }
@@ -367,8 +401,8 @@ class Player(private val playerService: PlayerService) : Runnable, AudioManager.
         playerHandler.post {
             Logger.logI(tag, "next")
             with(simpleExoPlayer) {
-                childId ?: return@post
-                val allChildren = runBlocking { MediaRepo.otherChildren(childId!!) }
+                mChildMediaId ?: return@post
+                val allChildren = runBlocking { MediaRepo.otherChildren(mChildMediaId!!) }
                 if (currentWindowIndex < allChildren.lastIndex) seekTo(simpleExoPlayer.currentWindowIndex + 1, 0)
                 else seekTo(0, 0)
                 if (!playWhenReady) play()
@@ -380,8 +414,8 @@ class Player(private val playerService: PlayerService) : Runnable, AudioManager.
         playerHandler.post {
             Logger.logI(tag, "previous")
             with(simpleExoPlayer) {
-                childId ?: return@post
-                val allChildren = runBlocking { MediaRepo.otherChildren(childId!!) }
+                mChildMediaId ?: return@post
+                val allChildren = runBlocking { MediaRepo.otherChildren(mChildMediaId!!) }
                 if (currentWindowIndex == 0) seekTo(allChildren.lastIndex, 0)
                 else seekTo(currentWindowIndex - 1, 0)
                 if (!playWhenReady) play()
