@@ -272,6 +272,9 @@ class Player(private val playerService: PlayerService) : Runnable, AudioManager.
         PlayerNotification.notify(playerService, mediaSession, false)
     }
 
+    private fun isPlayingEnded(): Boolean {
+        return simpleExoPlayer.playbackState == Player.STATE_ENDED
+    }
 
     override fun onAudioFocusChange(focusChange: Int) {
         when (focusChange) {
@@ -329,8 +332,11 @@ class Player(private val playerService: PlayerService) : Runnable, AudioManager.
         playerHandler.post {
             Logger.logI(tag, "prepare player")
             runBlocking {
-                if (childMediaId == Key.EMPTY_MEDIA_ID) {
+                if (childMediaId == Key.EMPTY_MEDIA_ID && !isPlayingEnded()) {
                     if (childId != null) playPause()
+                    return@runBlocking
+                } else if (childMediaId == Key.EMPTY_MEDIA_ID && isPlayingEnded()) {
+                    seekTo(0);play()
                     return@runBlocking
                 }
                 val childMedia: Media = MediaRepo.mediaForId(childMediaId)
@@ -339,7 +345,13 @@ class Player(private val playerService: PlayerService) : Runnable, AudioManager.
                 val allChildrenIds = allChildren.map { it.id }
                 if (childId != null) {
                     if (allChildrenIds.contains(childId!!)) {
-                        if (childId == childMediaId) playPause() else seekToChild(childIndex)
+                        if (childId == childMediaId && !isPlayingEnded()) {
+                            playPause()
+                        } else if (childId == childMediaId && isPlayingEnded()) {
+                            seekTo(0);play()
+                        } else {
+                            seekToChild(childIndex)
+                        }
                     } else {
                         internalPrepare(allChildren);seekToChild(childIndex);play()
                     }
