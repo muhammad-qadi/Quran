@@ -18,18 +18,22 @@ class MediaAdapter(private val mediaList: MutableList<Media> = mutableListOf()) 
     override fun getItemCount(): Int = mediaList.size
 
     override fun onBindViewHolder(holder: MediaHolder, position: Int) {
-        val mediaItem = mediaList[holder.adapterPosition];holder.itemView.title.text = mediaItem.title
-        holder.itemView.title.isSelected = true
-        holder.itemView.setOnClickListener {
-            val ma = holder.itemView.context as MainActivity
-            if (mediaItem.isList) {
-                val bundle = Bundle();bundle.putString(Const.MEDIA_ID, mediaItem.id);bundle.putString(
-                    "title",
-                    mediaItem.title
-                )
-                ma.findNavController(R.id.nav_host_fragment).navigate(R.id.action_global_mediaFragment, bundle)
-            } else {
-                ma.playPause(mediaItem.id)
+        val mediaItem = mediaList[holder.adapterPosition]
+        with(holder.itemView) {
+            title.text = mediaItem.title;title.isSelected = true
+            if (mediaItem.isList) avatar.setImageResource(R.drawable.ic_album)
+            else avatar.setImageResource(0)
+            setOnClickListener {
+                val ma = holder.itemView.context as MainActivity
+                if (mediaItem.isList) {
+                    val bundle = Bundle();bundle.putString(Const.MEDIA_ID, mediaItem.id);bundle.putString(
+                        "title",
+                        mediaItem.title
+                    )
+                    ma.findNavController(R.id.nav_host_fragment).navigate(R.id.action_global_mediaFragment, bundle)
+                } else {
+                    ma.playPause(mediaItem.id)
+                }
             }
         }
     }
