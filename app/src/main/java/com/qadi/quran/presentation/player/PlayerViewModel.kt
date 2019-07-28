@@ -10,10 +10,14 @@ import android.support.v4.media.session.MediaControllerCompat
 import android.support.v4.media.session.PlaybackStateCompat
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.viewModelScope
 import com.qadi.quran.domain.ext.millisToPlayerDuration
 import com.qadi.quran.domain.log.Logger
 import com.qadi.quran.domain.player.PlayerService
-import com.qadi.quran.entity.Key
+import com.qadi.quran.domain.repo.MediaRepo
+import com.qadi.quran.entity.ChildMediaId
+import com.qadi.quran.entity.Const
+import kotlinx.coroutines.launch
 
 class PlayerViewModel(private val app: Application) : AndroidViewModel(app) {
 
@@ -38,10 +42,10 @@ class PlayerViewModel(private val app: Application) : AndroidViewModel(app) {
 
         override fun onSessionEvent(event: String, extras: Bundle) {
             when (event) {
-                Key.PLAYER_ELAPSED_TIME_EVENT -> elapsedTime.value =
+                Const.PLAYER_ELAPSED_TIME_EVENT -> elapsedTime.value =
                     Pair(
-                        extras.getLong(Key.PLAYER_ELAPSED_TIME).millisToPlayerDuration(),
-                        extras.getLong(Key.PLAYER_ELAPSED_TIME)
+                        extras.getLong(Const.PLAYER_ELAPSED_TIME).millisToPlayerDuration(),
+                        extras.getLong(Const.PLAYER_ELAPSED_TIME)
                     )
             }
         }
@@ -94,12 +98,55 @@ class PlayerViewModel(private val app: Application) : AndroidViewModel(app) {
         return mediaControllerCompat.shuffleMode == PlaybackStateCompat.SHUFFLE_MODE_ALL
     }
 
-    fun seekTo(progress: Int) {
-        mediaControllerCompat.transportControls.seekTo(progress.toLong())
+    private fun lastChildMediaId(): ChildMediaId? {
+        return mediaControllerCompat.metadata?.getString(MediaMetadataCompat.METADATA_KEY_MEDIA_ID)
     }
 
-    fun playPause(mediaId: String) {
-        prepare(mediaId)
+    private fun play() {
+        mediaControllerCompat.transportControls.play()
+    }
+
+    private fun pause() {
+        mediaControllerCompat.transportControls.pause()
+    }
+
+    private suspend fun isSiblings(childMediaId1: ChildMediaId, childMediaId2: ChildMediaId): Boolean {
+        val siblings = MediaRepo.otherChildren(childMediaId1).map { it.id }
+        return siblings.contains(childMediaId2)
+    }
+
+    private fun isPlaying(): Boolean {
+        return mediaControllerCompat.playbackState?.state == PlaybackStateCompat.STATE_PLAYING
+    }
+
+    fun playPause(childMediaId: ChildMediaId) {
+        viewModelScope.launch {
+            if (lastChildMediaId() == childMediaId) {
+                if (isPlaying()) pause() else play()
+            } else {
+                val playingChildMediaId: String? = lastChildMediaId()
+                if (playingChildMediaId == null) {
+                    prepare(childMediaId).also { play() }
+                } else {
+                    if (isSiblings(childMediaId, lastChildMediaId()!!)) {
+                        mediaControllerCompat.transportControls
+                            .sendCustomAction(Const.PLAYER_ACTION_SKIP_TO_MEDIA_ID,
+                                Bundle().apply
+                                { putString(Const.MEDIA_ID, childMediaId) })
+                    } else {
+                        prepare(childMediaId).also { play() }
+                    }
+                }
+            }
+        }
+    }
+
+    fun playPause() {
+        if (isPlaying()) pause() else play()
+    }
+
+    fun seekTo(progress: Int) {
+        mediaControllerCompat.transportControls.seekTo(progress.toLong())
     }
 
     fun next() {

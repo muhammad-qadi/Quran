@@ -8,6 +8,7 @@ import android.support.v4.media.session.MediaSessionCompat
 import androidx.media.MediaBrowserServiceCompat
 import androidx.media.session.MediaButtonReceiver
 import com.qadi.quran.domain.log.Logger
+import com.qadi.quran.entity.Const
 
 class PlayerService : MediaBrowserServiceCompat() {
 
@@ -17,39 +18,21 @@ class PlayerService : MediaBrowserServiceCompat() {
     private lateinit var mutableMediaSession: MediaSessionCompat
 
     private val mediaSessionCallback: MediaSessionCompat.Callback = object : MediaSessionCompat.Callback() {
-
-        override fun onSeekTo(pos: Long) {
-            player.seekTo(pos)
+        override fun onCustomAction(action: String, extras: Bundle) {
+            when (action) {
+                Const.PLAYER_ACTION_SKIP_TO_MEDIA_ID -> player.seekToChild(extras.getString(Const.MEDIA_ID)!!)
+            }
         }
 
-        override fun onSkipToNext() {
-            player.next()
-        }
-
-        override fun onSkipToPrevious() {
-            player.previous()
-        }
-
-        override fun onPlay() {
-            player.playPause()
-        }
-
-        override fun onPause() {
-            player.playPause()
-        }
-
-        override fun onSetRepeatMode(repeatMode: Int) {
-            player.setRepeatMode(repeatMode)
-        }
-
-        override fun onSetShuffleMode(shuffleMode: Int) {
-            player.setShuffleMode(shuffleMode)
-        }
-
-        override fun onPrepareFromMediaId(mediaId: String, extras: Bundle) {
-            player.prepare(mediaId)
-        }
-
+        override fun onPlay() = player.play()
+        override fun onPause() = player.pause()
+        override fun onSkipToNext() = player.next()
+        override fun onSkipToPrevious() = player.previous()
+        override fun onSeekTo(pos: Long) = player.seekTo(pos)
+        override fun onSetRepeatMode(repeatMode: Int) = player.setRepeatMode(repeatMode)
+        override fun onSetShuffleMode(shuffleMode: Int) = player.setShuffleMode(shuffleMode)
+        override fun onPrepareFromMediaId(mediaId: String, extras: Bundle) =
+            player.setChildMediaId(mediaId).also { player.prepare() }
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {

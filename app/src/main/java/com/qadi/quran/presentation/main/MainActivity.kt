@@ -33,7 +33,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun playPause(mediaId: String) {
-        playerFragment().playPauseMedia(mediaId)
+        playerFragment().playPause(mediaId)
     }
 
     private fun playerFragment(): PlayerFragment {

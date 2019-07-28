@@ -7,7 +7,7 @@ import android.view.ViewGroup
 import androidx.navigation.findNavController
 import androidx.recyclerview.widget.RecyclerView
 import com.qadi.quran.R
-import com.qadi.quran.entity.Key
+import com.qadi.quran.entity.Const
 import com.qadi.quran.entity.Media
 import com.qadi.quran.presentation.main.MainActivity
 import kotlinx.android.synthetic.main.media_item.view.*
@@ -23,7 +23,7 @@ class MediaAdapter(private val mediaList: MutableList<Media> = mutableListOf()) 
         holder.itemView.setOnClickListener {
             val ma = holder.itemView.context as MainActivity
             if (mediaItem.isList) {
-                val bundle = Bundle();bundle.putString(Key.MEDIA_ID, mediaItem.id);bundle.putString(
+                val bundle = Bundle();bundle.putString(Const.MEDIA_ID, mediaItem.id);bundle.putString(
                     "title",
                     mediaItem.title
                 )

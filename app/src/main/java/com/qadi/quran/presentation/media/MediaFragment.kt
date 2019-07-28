@@ -9,7 +9,7 @@ import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.GridLayoutManager
 import com.qadi.quran.R
 import com.qadi.quran.domain.log.Logger
-import com.qadi.quran.entity.Key
+import com.qadi.quran.entity.Const
 import com.qadi.quran.entity.Media
 import com.qadi.quran.presentation.ext.hide
 import com.qadi.quran.presentation.ext.show
@@ -37,7 +37,7 @@ class MediaFragment : Fragment() {
     }
 
     private fun initPullToRefresh() {
-        if (parentMediaId != Key.MAIN_MEDIA_ID) srl.isEnabled = false
+        if (parentMediaId != Const.MAIN_MEDIA_ID) srl.isEnabled = false
         srl.setOnRefreshListener { onRefresh() }
     }
 
@@ -58,7 +58,7 @@ class MediaFragment : Fragment() {
 
     private fun loadMediaList() {
         Logger.logI(logTag, "loadMediaList")
-        if (parentMediaId == Key.MAIN_MEDIA_ID) srl.isRefreshing = true
+        if (parentMediaId == Const.MAIN_MEDIA_ID) srl.isRefreshing = true
         vm.mediaChildrenForParentId(parentMediaId)
             .observe(this,
                 Observer { updateAdapter(it);srl.isRefreshing = false;showNoContent(it.isEmpty()) })

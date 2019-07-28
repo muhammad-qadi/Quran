@@ -15,7 +15,6 @@ import butterknife.OnClick
 import butterknife.Unbinder
 import com.qadi.quran.R
 import com.qadi.quran.domain.ext.millisToPlayerDuration
-import com.qadi.quran.entity.Key
 import com.qadi.quran.presentation.ext.hide
 import com.qadi.quran.presentation.ext.show
 import kotlinx.android.synthetic.main.fragment_player.*
@@ -158,32 +157,21 @@ class PlayerFragment : Fragment() {
         unbinder.unbind()
     }
 
-    fun playPauseMedia(mediaId: String) {
-        vm.playPause(mediaId)
-    }
+    fun playPause(mediaId: String) = vm.playPause(mediaId)
 
     @OnClick(R.id.playPause)
-    fun playPause() {
-        vm.playPause(Key.EMPTY_MEDIA_ID)
-    }
+    fun playPauseClick() = vm.playPause()
 
     @OnClick(R.id.previous)
-    fun previous() {
-        vm.previous()
-    }
+    fun previousClick() = vm.previous()
 
     @OnClick(R.id.next)
-    fun next() {
-        vm.next()
-    }
+    fun nextClick() = vm.next()
 
     @OnClick(R.id.repeatOne)
-    fun repeatOne() {
-        vm.toggleRepeatOne()
-    }
+    fun repeatOneClick() = vm.toggleRepeatOne()
 
     @OnClick(R.id.shuffle)
-    fun shuffle() {
-        vm.toggleShuffle()
-    }
+    fun shuffleClick() = vm.toggleShuffle()
+
 }
