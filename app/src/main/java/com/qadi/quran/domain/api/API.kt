@@ -5,15 +5,16 @@ import com.github.kittinunf.fuel.coroutines.awaitResult
 import com.github.kittinunf.fuel.httpGet
 import com.qadi.quran.entity.Response
 import kotlinx.coroutines.Dispatchers
+import kotlin.coroutines.CoroutineContext
 
 const val BASE_URL = "https://qadi-quran.herokuapp.com"
 
-suspend fun loadAllMediaJson(): Response {
+suspend fun loadAllMediaJson(coroutineContext: CoroutineContext = Dispatchers.IO): Response {
     return Uri.parse(BASE_URL)
         .buildUpon()
         .appendPath("get").appendPath("media")
         .toString().httpGet()
-        .awaitResult(Response.Deserializer(), Dispatchers.IO).component1() ?: Response(listOf())
+        .awaitResult(Response.Deserializer(), coroutineContext).component1() ?: Response(listOf())
 }
 
 fun streamUrl(mediaId: String): String =

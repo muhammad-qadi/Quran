@@ -3,6 +3,8 @@ package com.qadi.quran.domain.repo
 import com.qadi.quran.domain.api.loadAllMediaJson
 import com.qadi.quran.domain.log.Logger
 import com.qadi.quran.entity.*
+import kotlinx.coroutines.Dispatchers
+import kotlin.coroutines.CoroutineContext
 
 object MediaRepo {
 
@@ -10,9 +12,9 @@ object MediaRepo {
     private val allMedia: MutableList<Media> = mutableListOf()
     private val mediaMap: MutableMap<String, List<Media>> = mutableMapOf()
 
-    private suspend fun allMedia(): List<Media> {
+    private suspend fun allMedia(coroutineContext: CoroutineContext = Dispatchers.IO): List<Media> {
         return if (allMedia.isEmpty()) {
-            allMedia.addAll(loadAllMediaJson().media);Logger.logI(TAG, "all media NOT cached.");allMedia
+            allMedia.addAll(loadAllMediaJson(coroutineContext).media);Logger.logI(TAG, "all media NOT cached.");allMedia
         } else allMedia.apply { Logger.logI(TAG, "all media CACHED.") }
     }
 
@@ -36,10 +38,6 @@ object MediaRepo {
         val childMedia = allMedia().first { it.id == childMediaId }
         val parentMediaId = childMedia.parentId
         return allMedia().filter { it.parentId == parentMediaId && !it.isList }
-    }
-
-    suspend fun mediaForId(id: String): Media {
-        return allMedia().first { it.id == id }
     }
 
 }
