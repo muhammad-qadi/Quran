@@ -19,3 +19,5 @@
 .idea/runConfigurations.xml
 .idea/vcs.xml
 app/src/main/res/drawable-v24/
+*.apk
+/app/release/output.json
