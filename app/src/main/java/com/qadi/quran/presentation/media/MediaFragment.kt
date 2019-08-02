@@ -42,7 +42,7 @@ class MediaFragment : Fragment() {
     }
 
     private fun onRefresh() {
-        loadMediaList()
+        loadMediaList(true)
     }
 
     private fun initList() {
@@ -56,10 +56,10 @@ class MediaFragment : Fragment() {
         title.text = intTitle
     }
 
-    private fun loadMediaList() {
+    private fun loadMediaList(force: Boolean = false) {
         Logger.logI(logTag, "loadMediaList")
         if (parentMediaId == Const.MAIN_MEDIA_ID) srl.isRefreshing = true
-        vm.mediaChildrenForParentId(parentMediaId)
+        vm.mediaChildrenForParentId(parentMediaId, force)
             .observe(this,
                 Observer { updateAdapter(it);srl.isRefreshing = false;showNoContent(it.isEmpty()) })
     }

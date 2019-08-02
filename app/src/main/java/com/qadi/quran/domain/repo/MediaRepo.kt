@@ -12,20 +12,27 @@ object MediaRepo {
     private val allMedia: MutableList<Media> = mutableListOf()
     private val mediaMap: MutableMap<String, List<Media>> = mutableMapOf()
 
-    private suspend fun allMedia(coroutineContext: CoroutineContext = Dispatchers.IO): List<Media> {
-        return if (allMedia.isEmpty()) {
+    private suspend fun allMedia(
+        coroutineContext: CoroutineContext = Dispatchers.IO,
+        force: Boolean = false
+    ): List<Media> {
+        return if (allMedia.isEmpty() || force) {
+            if (allMedia.isNotEmpty()) allMedia.clear()
             allMedia.addAll(loadAllMediaJson(coroutineContext).media);Logger.logI(TAG, "all media NOT cached.");allMedia
         } else allMedia.apply { Logger.logI(TAG, "all media CACHED.") }
     }
 
-    suspend fun mediaChildrenForParentId(parentMediaId: ParentMediaId = Const.MAIN_MEDIA_ID): List<ChildMedia> {
-        if (mediaMap[parentMediaId]?.isEmpty() != false) return filterMedia(parentMediaId)
-        return mediaMap[parentMediaId] ?: filterMedia(parentMediaId)
+    private suspend fun filterMedia(parentMediaId: ParentMediaId, force: Boolean = false): List<Media> {
+        return (allMedia(force = force)
+            .filter { it.parentId == parentMediaId }).apply { mediaMap[parentMediaId] = this }
     }
 
-    private suspend fun filterMedia(parentMediaId: ParentMediaId): List<Media> {
-        return (allMedia()
-            .filter { it.parentId == parentMediaId }).apply { mediaMap[parentMediaId] = this }
+    suspend fun mediaChildrenForParentId(
+        parentMediaId: ParentMediaId = Const.MAIN_MEDIA_ID,
+        force: Boolean
+    ): List<ChildMedia> {
+        if (mediaMap[parentMediaId]?.isEmpty() != false || force) return filterMedia(parentMediaId, force)
+        return mediaMap[parentMediaId] ?: filterMedia(parentMediaId, force)
     }
 
     suspend fun parentMediaForChildId(childMediaId: ChildMediaId): ParentMedia {

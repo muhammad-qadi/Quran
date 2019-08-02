@@ -11,8 +11,11 @@ import com.qadi.quran.entity.ParentMediaId
 
 class MediaViewModel(val app: Application) : AndroidViewModel(app) {
 
-    fun mediaChildrenForParentId(parentMediaId: ParentMediaId = Const.MAIN_MEDIA_ID): LiveData<List<ChildMedia>> =
+    fun mediaChildrenForParentId(
+        parentMediaId: ParentMediaId = Const.MAIN_MEDIA_ID,
+        force: Boolean
+    ): LiveData<List<ChildMedia>> =
         liveData {
-            emit(MediaRepo.mediaChildrenForParentId(parentMediaId))
+            emit(MediaRepo.mediaChildrenForParentId(parentMediaId, force))
         }
 }
