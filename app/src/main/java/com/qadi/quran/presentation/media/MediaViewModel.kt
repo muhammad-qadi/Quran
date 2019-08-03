@@ -16,6 +16,6 @@ class MediaViewModel(val app: Application) : AndroidViewModel(app) {
         force: Boolean
     ): LiveData<List<ChildMedia>> =
         liveData {
-            emit(MediaRepo.mediaChildrenForParentId(parentMediaId, force))
+            emit(MediaRepo.mediaChildrenForParentId(app,parentMediaId, force))
         }
 }
