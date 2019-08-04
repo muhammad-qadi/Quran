@@ -27,7 +27,7 @@ import com.google.android.exoplayer2.upstream.DefaultHttpDataSourceFactory
 import com.google.android.exoplayer2.upstream.cache.CacheDataSourceFactory
 import com.google.android.exoplayer2.upstream.cache.LeastRecentlyUsedCacheEvictor
 import com.google.android.exoplayer2.upstream.cache.SimpleCache
-import com.qadi.quran.domain.api.streamUrl
+import com.qadi.quran.domain.api.API
 import com.qadi.quran.domain.log.Logger
 import com.qadi.quran.domain.repo.MediaRepo
 import com.qadi.quran.entity.ChildMedia
@@ -35,15 +35,15 @@ import com.qadi.quran.entity.ChildMediaId
 import com.qadi.quran.entity.Const
 import com.qadi.quran.entity.Media
 import kotlinx.coroutines.runBlocking
+import org.koin.core.KoinComponent
+import org.koin.core.inject
 import com.qadi.quran.domain.player.Player as QuranPlayer
 
-class Player(private val playerService: PlayerService) : Runnable, AudioManager.OnAudioFocusChangeListener {
+class Player(private val playerService: PlayerService) : Runnable,
+    AudioManager.OnAudioFocusChangeListener, KoinComponent {
 
     private val tag = "Qadi-Player"
-
-    private val app = playerService.application
     private val elapsedTimeRefreshInterval = 1000L
-
     private val userAgent = "Muhammad-Qadi"
     private val playerHandlerThread = HandlerThread("player_handler_thread")
     private val playerHandler: Handler by lazy { Handler(playerHandlerThread.looper) }
@@ -55,6 +55,8 @@ class Player(private val playerService: PlayerService) : Runnable, AudioManager.
             pause()
         }
     }
+    private val api: API by inject()
+
     private var isInit = false
     private var playOnFocus: Boolean = false
     private var isNoisyReceiverRegistered: Boolean = false
@@ -165,7 +167,7 @@ class Player(private val playerService: PlayerService) : Runnable, AudioManager.
     }
 
     private suspend fun allChildren(childMediaId: ChildMediaId): List<ChildMedia> {
-        return MediaRepo.otherChildren(app, childMediaId)
+        return MediaRepo.otherChildren(childMediaId)
     }
 
     private suspend fun currentChildMedia(childMediaId: ChildMediaId): Media {
@@ -173,7 +175,7 @@ class Player(private val playerService: PlayerService) : Runnable, AudioManager.
     }
 
     private suspend fun parentMedia(childMediaId: ChildMediaId): Media {
-        return MediaRepo.parentMediaForChildId(app, childMediaId)
+        return MediaRepo.parentMediaForChildId(childMediaId)
     }
 
     private fun buildMetadata(childMediaId: ChildMediaId): MediaMetadataCompat {
@@ -193,7 +195,7 @@ class Player(private val playerService: PlayerService) : Runnable, AudioManager.
         val mediaSources: Array<ExtractorMediaSource> = allChildren
             .map {
                 ExtractorMediaSource.Factory(cacheDataSourceFactory)
-                    .createMediaSource(Uri.parse(streamUrl(it.id)))
+                    .createMediaSource(Uri.parse(api.streamUrl(it.id)))
             }.toTypedArray()
         val contactingMediaSource = ConcatenatingMediaSource(*mediaSources)
         simpleExoPlayer.prepare(contactingMediaSource, true, true)
@@ -353,7 +355,7 @@ class Player(private val playerService: PlayerService) : Runnable, AudioManager.
             Logger.logI(tag, "next")
             if (::childMediaId.isInitialized) {
                 with(simpleExoPlayer) {
-                    val allChildren = runBlocking { MediaRepo.otherChildren(app, childMediaId) }
+                    val allChildren = runBlocking { MediaRepo.otherChildren(childMediaId) }
                     if (currentWindowIndex < allChildren.lastIndex) seekTo(simpleExoPlayer.currentWindowIndex + 1, 0)
                     else seekTo(0, 0)
                     if (!playWhenReady) play()
@@ -367,7 +369,7 @@ class Player(private val playerService: PlayerService) : Runnable, AudioManager.
             Logger.logI(tag, "previous")
             if (::childMediaId.isInitialized) {
                 with(simpleExoPlayer) {
-                    val allChildren = runBlocking { MediaRepo.otherChildren(app, childMediaId) }
+                    val allChildren = runBlocking { MediaRepo.otherChildren(childMediaId) }
                     if (currentWindowIndex == 0) seekTo(allChildren.lastIndex, 0)
                     else seekTo(currentWindowIndex - 1, 0)
                     if (!playWhenReady) play()

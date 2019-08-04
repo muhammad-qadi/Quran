@@ -10,43 +10,44 @@ import com.qadi.quran.entity.Media
 import com.qadi.quran.entity.Response
 import com.qadi.quran.pref.getString
 import com.qadi.quran.pref.saveString
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlin.coroutines.CoroutineContext
 
-const val BASE_URL = "https://qadi-quran.herokuapp.com"
+class API(private val app: Application, private val cc: CoroutineContext) : CoroutineContext by cc {
 
-suspend fun loadAllMediaJson(app: Application, coroutineContext: CoroutineContext = Dispatchers.IO): Response {
-    return Uri.parse(BASE_URL)
-        .buildUpon()
-        .appendPath("get").appendPath("media")
-        .toString().httpGet()
-        .awaitResult(Response.Deserializer(), coroutineContext)
-        .component1()?.apply { cacheAllMedia(app, this.media, coroutineContext) } ?: Response(
-        allCachedMedia(
-            app,
-            coroutineContext
+    companion object {
+        private const val BASE_URL = "https://qadi-quran.herokuapp.com"
+    }
+
+    private suspend fun cacheAllMedia(media: List<Media>) =
+        withContext(cc) {
+            val value = Gson().toJson(media, object : TypeToken<List<Media>>() {}.type)
+            saveString(app, "all_media", value, cc)
+        }
+
+    private suspend fun allCachedMedia() =
+        withContext(cc) {
+            Gson().fromJson<List<Media>>(getString(app, "all_media", cc), object : TypeToken<List<Media>>() {}.type)
+        }
+
+    suspend fun loadAllMediaJson(): Response {
+        return Uri.parse(BASE_URL)
+            .buildUpon()
+            .appendPath("get").appendPath("media")
+            .toString().httpGet()
+            .awaitResult(Response.Deserializer(), cc)
+            .component1()?.apply { cacheAllMedia(media) } ?: Response(
+            allCachedMedia()
         )
-    )
+    }
+
+    fun streamUrl(mediaId: String): String =
+        Uri
+            .parse(BASE_URL)
+            .buildUpon()
+            .appendPath("stream")
+            .appendPath("media")
+            .appendQueryParameter("id", mediaId)
+            .build()
+            .toString()
 }
-
-private suspend fun cacheAllMedia(app: Application, media: List<Media>, coroutineContext: CoroutineContext) =
-    withContext(coroutineContext) {
-        val value = Gson().toJson(media, object : TypeToken<List<Media>>() {}.type)
-        saveString(app, "all_media", value, coroutineContext)
-    }
-
-private suspend fun allCachedMedia(app: Application, coroutineContext: CoroutineContext = Dispatchers.IO): List<Media> =
-    withContext(coroutineContext) {
-        Gson().fromJson<List<Media>>(getString(app, "all_media", coroutineContext), object : TypeToken<List<Media>>() {}.type)
-    }
-
-fun streamUrl(mediaId: String): String =
-    Uri
-        .parse(BASE_URL)
-        .buildUpon()
-        .appendPath("stream")
-        .appendPath("media")
-        .appendQueryParameter("id", mediaId)
-        .build()
-        .toString()
