@@ -21,8 +21,8 @@ class MediaAdapter(private val mediaList: MutableList<Media> = mutableListOf()) 
         val mediaItem = mediaList[holder.adapterPosition]
         with(holder.itemView) {
             title.text = mediaItem.title;title.isSelected = true
-            if (mediaItem.isList) avatar.setImageResource(R.drawable.ic_album)
-            else avatar.setImageResource(0)
+            if (mediaItem.isList) avatar.setImageResource(R.drawable.ic_playlist)
+            else avatar.setImageResource(R.drawable.ic_track)
             setOnClickListener {
                 val ma = holder.itemView.context as MainActivity
                 if (mediaItem.isList) {
