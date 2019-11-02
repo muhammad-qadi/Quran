@@ -9,7 +9,7 @@ import android.view.ViewGroup
 import android.widget.SeekBar
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
-import androidx.lifecycle.ViewModelProviders
+import androidx.lifecycle.ViewModelProvider
 import butterknife.ButterKnife
 import butterknife.OnClick
 import butterknife.Unbinder
@@ -21,14 +21,14 @@ import kotlinx.android.synthetic.main.fragment_player.*
 
 class PlayerFragment : Fragment() {
 
-    private val vm: PlayerViewModel by lazy { ViewModelProviders.of(this).get(PlayerViewModel::class.java) }
+    private val vm: PlayerViewModel by lazy { ViewModelProvider(this).get(PlayerViewModel::class.java) }
 
     private lateinit var unbinder: Unbinder
 
     private var isUserSeeking: Boolean = false
 
     private fun observerPlayerState() {
-        vm.playerState.observe(this, Observer {
+        vm.playerState.observe(viewLifecycleOwner, Observer {
             when (it) {
                 PlaybackStateCompat.STATE_BUFFERING -> onBuffering()
                 PlaybackStateCompat.STATE_ERROR -> onError()
@@ -40,7 +40,7 @@ class PlayerFragment : Fragment() {
     }
 
     private fun observerPlayerMetadata() {
-        vm.playerMetadata.observe(this, Observer {
+        vm.playerMetadata.observe(viewLifecycleOwner, Observer {
             setTitle(it.mediaTitle);setSubTitle(it.mediaItemTitle)
             setDuration(it.mediaItemDuration);setSeekBarMax(it.mediaItemDurationMillis)
         })
@@ -64,7 +64,7 @@ class PlayerFragment : Fragment() {
     }
 
     private fun observerElapsedTime() {
-        vm.elapsedTime.observe(this, Observer {
+        vm.elapsedTime.observe(viewLifecycleOwner, Observer {
             if (!isUserSeeking) {
                 elapsedDuration.text = it.first
                 seekBar.setProgressCompat(it.second)
@@ -73,13 +73,13 @@ class PlayerFragment : Fragment() {
     }
 
     private fun observerRepeatOneMode() {
-        vm.repeatOne.observe(this, Observer {
+        vm.repeatOne.observe(viewLifecycleOwner, Observer {
             repeatOne.setImageResource(if (it) R.drawable.ic_repeat_one_active else R.drawable.ic_repeat_one)
         })
     }
 
     private fun observerShuffleMode() {
-        vm.shuffle.observe(this, Observer {
+        vm.shuffle.observe(viewLifecycleOwner, Observer {
             shuffle.setImageResource(if (it) R.drawable.ic_shuffle_active else R.drawable.ic_shuffle)
         })
     }
@@ -108,7 +108,10 @@ class PlayerFragment : Fragment() {
     }
 
     private fun SeekBar.setProgressCompat(inProgress: Long) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) seekBar.setProgress(inProgress.toInt(), true)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) seekBar.setProgress(
+            inProgress.toInt(),
+            true
+        )
         else progress = inProgress.toInt()
     }
 
@@ -130,7 +133,11 @@ class PlayerFragment : Fragment() {
         })
     }
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
         val view = inflater.inflate(R.layout.fragment_player, container, false)
         unbinder = ButterKnife.bind(this, view)
         return view
