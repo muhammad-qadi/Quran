@@ -3,7 +3,7 @@ package com.qadi.quran.presentation.main
 import android.content.Context
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
-import androidx.lifecycle.ViewModelProviders
+import androidx.lifecycle.ViewModelProvider
 import com.qadi.quran.R
 import com.qadi.quran.domain.lang.Lang
 import com.qadi.quran.presentation.media.MediaViewModel
@@ -13,7 +13,7 @@ import kotlinx.android.synthetic.main.activity_main.*
 
 class MainActivity : AppCompatActivity() {
 
-    val vm by lazy { ViewModelProviders.of(this).get(MediaViewModel::class.java) }
+    val vm by lazy { ViewModelProvider(this).get(MediaViewModel::class.java) }
 
     override fun attachBaseContext(newBase: Context) {
         super.attachBaseContext(Lang.setLocaleToArabic(newBase))
