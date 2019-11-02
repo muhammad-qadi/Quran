@@ -2,7 +2,7 @@ package com.qadi.quran.pref
 
 import android.annotation.SuppressLint
 import android.app.Application
-import android.preference.PreferenceManager
+import androidx.preference.PreferenceManager
 import kotlinx.coroutines.withContext
 import kotlin.coroutines.CoroutineContext
 

@@ -51,6 +51,7 @@ def gson = "2.8.5"
 def nav_ktx = "2.2.0-rc01"
 def fuel = "2.1.0"
 def koin_version = '2.0.1'
+def preference = "1.1.0"
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
@@ -79,6 +80,7 @@ dependencies {
     implementation "org.koin:koin-androidx-scope:$koin_version"
     implementation "org.koin:koin-androidx-viewmodel:$koin_version"
     implementation "org.koin:koin-androidx-ext:$koin_version"
+    implementation "androidx.preference:preference-ktx:$preference"
     implementation 'de.hdodenhof:circleimageview:3.0.0'
     //test
     androidTestImplementation group: "androidx.test.ext", name: "junit", version: "1.1.1"
