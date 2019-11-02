@@ -5,11 +5,11 @@ apply plugin: 'kotlin-kapt'
 apply plugin: "androidx.navigation.safeargs.kotlin"
 
 android {
-    compileSdkVersion 28
+    compileSdkVersion 29
     defaultConfig {
         applicationId "com.qadi.quran"
         minSdkVersion 21
-        targetSdkVersion 28
+        targetSdkVersion 29
         versionCode 1
         versionName "1.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
@@ -41,14 +41,14 @@ android {
 
 def exo_Player = "2.9.5"
 def slidinguppanel = "3.4.0"
-def lifecycle = "2.2.0-alpha02"
-def livedata = "2.2.0-alpha02"
+def lifecycle = "2.2.0-rc01"
+def livedata = "2.2.0-rc01"
 def materialprogressbar = "1.6.1"
 def butterknife = "10.1.0"
-def appcompat = "1.0.2"
+def appcompat = "1.1.0"
 def legacy_support = "1.0.0"
 def gson = "2.8.5"
-def nav_ktx = "2.1.0-beta02"
+def nav_ktx = "2.2.0-rc01"
 def fuel = "2.1.0"
 def koin_version = '2.0.1'
 
